@@ -478,38 +478,46 @@ export default function Home() {
           </div>
         </div>
         <Divider />
+        <h1><b>Meeting Notes and Discussion</b></h1>
         <div>
-          Discussion
+          <h2><b>Meeting Outcomes</b></h2>
+          <ul style={{ listStyleType: "decimal", paddingLeft: "20px" }}>
+            {geminiResult?.data?.summary?.meeting_outcomes?.map(
+              (outcome, index) => (
+                <li key={index}>{outcome}</li>
+              )
+            )}
+          </ul>
+        </div>
+        <Divider />
+        <div>
+          <h2><b>Discussion Steps</b></h2>
+          <ul style={{ listStyleType: "decimal", paddingLeft: "20px" }}>
+            {geminiResult?.data?.summary?.discuss_steps?.map((step, index) => (
+              <li key={index}>{step}</li>
+            ))}
+          </ul>
         </div>
         <div>
-          {
-            geminiResult.data.summary.meeting_outcomes
-          }
-        </div>
-        <div>
-          {
-            geminiResult.data.summary.discuss_steps
-          }
-        </div>
-        <div>
-          <div>Counter Points</div>
-          {
+          <h2><b>Counter Points</b></h2>
+          {geminiResult?.data?.analysis?.counterpoints && geminiResult.data.analysis.counterpoints.length > 0 ? (
             geminiResult.data.analysis.counterpoints.map((counterpoint, index) => (
-              <div key={index}>
-                {counterpoint}
-              </div>
+              <div key={index}>{counterpoint}</div>
             ))
-          }
+          ) : (
+            <div>No data found</div>
+          )}
         </div>
+
         <div>
-          <div>Proposed Ideas</div>
-          {
+          <h2><b>Proposed Ideas</b></h2>
+          {geminiResult?.data?.analysis?.proposed_ideas && geminiResult.data.analysis.proposed_ideas.length > 0 ? (
             geminiResult.data.analysis.proposed_ideas.map((idea, index) => (
-              <div key={index}>
-                {idea}
-              </div>
+              <div key={index}>{idea}</div>
             ))
-          }
+          ) : (
+            <div>No data found</div>
+          )}
         </div>
         <Table>
           <TableHeader>
