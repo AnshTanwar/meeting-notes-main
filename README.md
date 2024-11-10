@@ -1,8 +1,11 @@
-![image](https://github.com/user-attachments/assets/75c946b2-5d74-45a7-a2f2-d78db7db4d35)
+### Website Link: https://hikemeetingapp.vercel.app/
 
-![image](https://github.com/user-attachments/assets/9d461b6d-04e3-426f-8fd8-1517676bace1)
+![image](https://github.com/user-attachments/assets/40b19694-6c03-4b29-aab2-7e285164d949)
+![image](https://github.com/user-attachments/assets/f66c1cac-f891-4a8f-98d7-5ff2d394a1f9)
+![image](https://github.com/user-attachments/assets/b2fce49b-0c2a-4836-a65a-315946df6fd1)
+![image](https://github.com/user-attachments/assets/80c9fbb6-bbd3-4a54-86ae-af80628aed8b)
 
-![image](https://github.com/user-attachments/assets/351b4dc4-4585-4d64-b99e-69c2f14c0517)
+
 
 
 # Next.js Application
@@ -34,7 +37,11 @@ Ensure you have *Node.js* and *npm* installed on your machine. You can download 
 3. *Set up environment variables*: Add the following key-value pair to the .env file:
    Create a .env file: In the root directory, create a new file named .env.
    ```bash
-        ASSEMBLYAI_API_KEY=<your assembly api key>
+        ASSEMBLYAI_API_KEY=<your api key>
+        FIREBASE_SERVICE_ACCOUNT_KEY_BASE64=<your api key>
+        FIREBASE_STORAGE_BUCKET=<your api key>
+   
+        
    ```
    
 
