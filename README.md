@@ -13,7 +13,7 @@ Follow these steps to get started:
 Ensure you have *Node.js* and *npm* installed on your machine. You can download them [here](https://nodejs.org/).
 
 ## Installation
-
+.
 
 
 1. *Clone the Repository*: Clone this repository to your local machine.
