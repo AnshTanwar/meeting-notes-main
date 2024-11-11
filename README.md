@@ -1,4 +1,4 @@
-#### Website Link: https://hikemeetingapp.vercel.app/
+#### Website Link: https://meeting-notes-main.vercel.app/
 #### Google Colab Demo: https://colab.research.google.com/drive/1BWbhKEIG9HMczS0sl8ejKHhrm-KAuziT?usp=sharing
 
 ![image](https://github.com/user-attachments/assets/40b19694-6c03-4b29-aab2-7e285164d949)
