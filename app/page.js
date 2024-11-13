@@ -522,6 +522,7 @@ export default function Home() {
         <Table>
           <TableHeader>
             <TableColumn>Actions and Insights</TableColumn>
+            <TableColumn>ETA</TableColumn>
             <TableColumn>DCI</TableColumn>
             <TableColumn>Decision Pending</TableColumn>
             <TableColumn>Importance</TableColumn>
@@ -531,9 +532,10 @@ export default function Home() {
               geminiResult.data.actions.map((action, index) => (
                 <TableRow key={index}>
                   <TableCell>{action.description}</TableCell>
+                  <TableCell>{action.Deadline}</TableCell>
                   <TableCell>
-                    D : {action.DRI},
-                    C : {action.C[0]},
+                    D : {action.DRI} <br/>
+                    C : {action.C[0]} <br/>
                     I : {action.I[0]}
                   </TableCell>
                   <TableCell>Y</TableCell>
