@@ -77,7 +77,7 @@ export default function Home() {
       "video/mpeg",
       "video/quicktime",
     ];
-    const maxSize = 100 * 1024 * 1024; // 50MB
+    const maxSize = 100 * 1024 * 1024; // 100MB
 
     const filteredFiles = files.filter((file) => {
       if (!validTypes.includes(file.type)) {
