@@ -1,11 +1,28 @@
 // app/page.js
 
 'use client';
-import { useState } from "react";
-import { Input, Button, Textarea, Loading, Spacer, Divider } from "@nextui-org/react";
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@nextui-org/react";
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { storage } from '../utils/firebaseConfig';
+import { useState, useEffect } from "react";
+import {
+  Input,
+  Button,
+  Textarea,
+  Loading,
+  Spacer,
+  Divider,
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@nextui-org/react";
+import {
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+import { storage } from "../utils/firebaseConfig";
 
 export default function Home() {
   // State for the meeting details
@@ -18,15 +35,12 @@ export default function Home() {
   const [geminiResult, setGeminiResult] = useState(null);
 
   // State for participants
-  const [participants, setParticipants] = useState([
-    { name: "", email: "" },
-  ]);
+  const [participants, setParticipants] = useState([{ name: "", email: "" }]);
 
   // State for uploaded files
   const [uploadedFiles, setUploadedFiles] = useState([]);
 
   // State for transcription
-  const [transcription, setTranscription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -56,12 +70,12 @@ export default function Home() {
   const handleFileChange = async (event) => {
     const files = Array.from(event.target.files);
     const validTypes = [
-      'audio/mpeg',
-      'audio/mp4',
-      'audio/wav',
-      'video/mp4',
-      'video/mpeg',
-      'video/quicktime',
+      "audio/mpeg",
+      "audio/mp4",
+      "audio/wav",
+      "video/mp4",
+      "video/mpeg",
+      "video/quicktime",
     ];
     const maxSize = 50 * 1024 * 1024; // 50MB
 
@@ -82,7 +96,7 @@ export default function Home() {
       return;
     }
 
-    setError(''); // Reset error if any
+    setError(""); // Reset error if any
 
     // Upload each file to Firebase Storage
     filteredFiles.forEach((file) => {
@@ -102,10 +116,11 @@ export default function Home() {
       setUploadedFiles((prevFiles) => [...prevFiles, newFile]);
 
       uploadTask.on(
-        'state_changed',
+        "state_changed",
         (snapshot) => {
           // Update progress
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          const progress =
+            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           // Update the file's progress in the uploadedFiles state
           setUploadedFiles((prevFiles) =>
             prevFiles.map((f) =>
@@ -114,13 +129,15 @@ export default function Home() {
           );
         },
         (error) => {
-          console.error('Error uploading file:', error);
-          setError('Failed to upload file.');
+          console.error("Error uploading file:", error);
+          setError("Failed to upload file.");
 
           // Update the file's error and uploading status
           setUploadedFiles((prevFiles) =>
             prevFiles.map((f) =>
-              f.id === uniqueId ? { ...f, error: 'Failed to upload file.', uploading: false } : f
+              f.id === uniqueId
+                ? { ...f, error: "Failed to upload file.", uploading: false }
+                : f
             )
           );
         },
@@ -130,7 +147,9 @@ export default function Home() {
             // Update the file's url and uploading status
             setUploadedFiles((prevFiles) =>
               prevFiles.map((f) =>
-                f.id === uniqueId ? { ...f, url: downloadURL, uploading: false } : f
+                f.id === uniqueId
+                  ? { ...f, url: downloadURL, uploading: false }
+                  : f
               )
             );
           });
@@ -150,8 +169,8 @@ export default function Home() {
     try {
       await deleteObject(fileRef);
     } catch (error) {
-      console.error('Error deleting file:', error);
-      setError('Failed to delete file.');
+      console.error("Error deleting file:", error);
+      setError("Failed to delete file.");
       return;
     }
 
@@ -163,85 +182,125 @@ export default function Home() {
   // Handler for form submission
   const handleSubmit = async () => {
     setIsLoading(true);
-    setError('');
+    setError("");
     setTranscriptionResult(null);
 
     if (
       !meetingHost ||
       !meetingAgenda ||
       !meetingOutcomes ||
-      participants.some((participant) => !participant.name || !participant.email) ||
+      participants.some(
+        (participant) => !participant.name || !participant.email
+      ) ||
       uploadedFiles.length === 0
     ) {
-      setError('Please fill in all fields and upload a file to generate notes.');
+      setError(
+        "Please fill in all fields and upload a file to generate notes."
+      );
       setIsLoading(false);
       return;
     }
 
     if (uploadedFiles.some((file) => file.uploading || !file.url)) {
-      setError('Please wait until all files are uploaded.');
+      setError("Please wait until all files are uploaded.");
       setIsLoading(false);
       return;
     }
 
     try {
-      // Prepare the data to send to the server
-      const requestData = {
-        fileUrl: uploadedFiles[0].url, // Assuming one file for transcription
-        meetingHost,
-        meetingAgenda,
-        meetingOutcomes,
-        participants,
-      };
+      setIsLoading(true);
 
-      // Send the URL to the backend API route
-      const response = await fetch('/api/transcribe', {
-        method: 'POST',
-        body: JSON.stringify(requestData),
+      // Use the first uploaded file for transcription
+      const fileUrl = uploadedFiles[0].url;
+
+      // Initiate transcription
+      const initiateResponse = await fetch("/api/initiateTranscription", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({ audioUrl: fileUrl }),
       });
 
-      const data = await response.json();
+      const initiateData = await initiateResponse.json();
 
-      if (response.ok) {
-        setTranscriptionResult(data.transcriptionResult);
-        const transcript = [
-          ...data.transcriptionResult.utterances.map((utterance) => {
-            return [`Speaker ${utterance.speaker}`, utterance.text];
-          }),
-        ];
+      if (!initiateResponse.ok) {
+        throw new Error(initiateData.error || "Failed to initiate transcription.");
+      }
 
-        // Send transcript to your Gemini API
-        try {
-          const newResponse = await fetch('https://hikemeetingapp.vercel.app/api/analyze-meeting', {
-            method: 'POST',
-            body: JSON.stringify({
-              transcript,
-            }),
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-          const newData = await newResponse.json();
-          setGeminiResult(newData);
-        } catch (err) {
-          console.error(err);
-          setError('An unexpected error occurred.');
+      const { transcriptionId } = initiateData;
+
+      // Start polling for transcription status
+      const pollInterval = 5000; // 5 seconds
+      let polling = true;
+
+      while (polling) {
+        // Wait for the specified interval
+        await new Promise((resolve) => setTimeout(resolve, pollInterval));
+
+        // Check transcription status
+        const statusResponse = await fetch("/api/checkTranscriptionStatus", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ transcriptionId }),
+        });
+
+        const statusData = await statusResponse.json();
+
+        if (!statusResponse.ok) {
+          throw new Error(statusData.error || "Failed to check transcription status.");
         }
-      } else {
-        setError(data.error || 'An error occurred during transcription.');
+
+        const { status, error: transcriptionError, data } = statusData;
+
+        if (status === "completed") {
+          setTranscriptionResult(data);
+          polling = false;
+
+          // Process transcription result as needed
+          const transcript = data.utterances.map((utterance) => {
+            return [`Speaker ${utterance.speaker}`, utterance.text];
+          });
+
+          // Send transcript to your Gemini API
+          try {
+            const newResponse = await fetch(
+              "https://hikemeetingapp.vercel.app/api/analyze-meeting",
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  transcript,
+                }),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              }
+            );
+            const newData = await newResponse.json();
+            console.log(newData);
+            setGeminiResult(newData);
+          } catch (err) {
+            console.error(err);
+            setError("An unexpected error occurred while analyzing the meeting.");
+          }
+        } else if (status === "error") {
+          throw new Error(transcriptionError || "Transcription failed.");
+        }
+        // If status is 'queued' or 'processing', continue polling
       }
     } catch (err) {
       console.error(err);
-      setError('An unexpected error occurred.');
+      setError(err.message || "An unexpected error occurred during transcription.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const allFilesUploaded = uploadedFiles.length > 0 && uploadedFiles.every((file) => !file.uploading && file.url);
+  const allFilesUploaded =
+    uploadedFiles.length > 0 &&
+    uploadedFiles.every((file) => !file.uploading && file.url);
 
   if (!isLoading && !geminiResult)
     return (
@@ -296,7 +355,12 @@ export default function Home() {
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <span className="text-xl font-semibold">Participants</span>
-                <Button color="secondary" variant="flat" auto onClick={addParticipant}>
+                <Button
+                  color="secondary"
+                  variant="flat"
+                  auto
+                  onClick={addParticipant}
+                >
                   Add Participant
                 </Button>
               </div>
@@ -347,7 +411,9 @@ export default function Home() {
             {/* File Upload Section */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
-                <span className="text-xl font-semibold">Upload Meeting Files</span>
+                <span className="text-xl font-semibold">
+                  Upload Meeting Files
+                </span>
               </div>
 
               <div className="flex flex-col gap-2">
@@ -389,10 +455,14 @@ export default function Home() {
                             </div>
                           )}
                           {!file.uploading && file.url && (
-                            <div className="text-green-600 text-sm">Upload completed</div>
+                            <div className="text-green-600 text-sm">
+                              Upload completed
+                            </div>
                           )}
                           {file.error && (
-                            <div className="text-red-600 text-sm">{file.error}</div>
+                            <div className="text-red-600 text-sm">
+                              {file.error}
+                            </div>
                           )}
                         </li>
                       ))}
@@ -412,11 +482,7 @@ export default function Home() {
                 </div>
               )}
 
-              {error && (
-                <div className="text-red-500">
-                  {error}
-                </div>
-              )}
+              {error && <div className="text-red-500">{error}</div>}
             </div>
 
             {/* Submit Button */}
@@ -432,9 +498,9 @@ export default function Home() {
               </Button>
             </div>
           </div>
+          </div>
         </div>
-      </div>
-    );
+        );
 
   else if (isLoading)
     return (
@@ -446,19 +512,11 @@ export default function Home() {
   else
     return (
       <div className="flex flex-col w-[100vw] gap-8 p-12 h-[100vh] bg-white">
-        <h1>
-          Meeting notes
-        </h1>
+        <h1>Meeting notes</h1>
         <div className="flex flex-col gap-4">
-          <div>
-            Host: {meetingHost}
-          </div>
-          <div>
-            Agenda: {meetingAgenda}
-          </div>
-          <div>
-            Outcomes: {meetingOutcomes}
-          </div>
+          <div>Host: {meetingHost}</div>
+          <div>Agenda: {meetingAgenda}</div>
+          <div>Outcomes: {meetingOutcomes}</div>
           <div>
             Participants:
             <Table>
@@ -478,9 +536,13 @@ export default function Home() {
           </div>
         </div>
         <Divider />
-        <h1><b>Meeting Notes and Discussion</b></h1>
+        <h1>
+          <b>Meeting Notes and Discussion</b>
+        </h1>
         <div>
-          <h2><b>Meeting Outcomes</b></h2>
+          <h2>
+            <b>Meeting Outcomes</b>
+          </h2>
           <ul style={{ listStyleType: "decimal", paddingLeft: "20px" }}>
             {geminiResult?.data?.summary?.meeting_outcomes?.map(
               (outcome, index) => (
@@ -491,7 +553,9 @@ export default function Home() {
         </div>
         <Divider />
         <div>
-          <h2><b>Discussion Steps</b></h2>
+          <h2>
+            <b>Discussion Steps</b>
+          </h2>
           <ul style={{ listStyleType: "decimal", paddingLeft: "20px" }}>
             {geminiResult?.data?.summary?.discuss_steps?.map((step, index) => (
               <li key={index}>{step}</li>
@@ -499,8 +563,11 @@ export default function Home() {
           </ul>
         </div>
         <div>
-          <h2><b>Counter Points</b></h2>
-          {geminiResult?.data?.analysis?.counterpoints && geminiResult.data.analysis.counterpoints.length > 0 ? (
+          <h2>
+            <b>Counter Points</b>
+          </h2>
+          {geminiResult?.data?.analysis?.counterpoints &&
+          geminiResult.data.analysis.counterpoints.length > 0 ? (
             geminiResult.data.analysis.counterpoints.map((counterpoint, index) => (
               <div key={index}>{counterpoint}</div>
             ))
@@ -510,8 +577,11 @@ export default function Home() {
         </div>
 
         <div>
-          <h2><b>Proposed Ideas</b></h2>
-          {geminiResult?.data?.analysis?.proposed_ideas && geminiResult.data.analysis.proposed_ideas.length > 0 ? (
+          <h2>
+            <b>Proposed Ideas</b>
+          </h2>
+          {geminiResult?.data?.analysis?.proposed_ideas &&
+          geminiResult.data.analysis.proposed_ideas.length > 0 ? (
             geminiResult.data.analysis.proposed_ideas.map((idea, index) => (
               <div key={index}>{idea}</div>
             ))
@@ -528,21 +598,19 @@ export default function Home() {
             <TableColumn>Importance</TableColumn>
           </TableHeader>
           <TableBody>
-            {
-              geminiResult.data.actions.map((action, index) => (
-                <TableRow key={index}>
-                  <TableCell>{action.description}</TableCell>
-                  <TableCell>{action.Deadline}</TableCell>
-                  <TableCell>
-                    D : {action.DRI} <br/>
-                    C : {action.C[0]} <br/>
-                    I : {action.I[0]}
-                  </TableCell>
-                  <TableCell>Y</TableCell>
-                  <TableCell>{action.Importance}</TableCell>
-                </TableRow>
-              ))
-            }
+            {geminiResult.data.actions.map((action, index) => (
+              <TableRow key={index}>
+                <TableCell>{action.description}</TableCell>
+                <TableCell>{action.Deadline}</TableCell>
+                <TableCell>
+                  D : {action.DRI} <br />
+                  C : {action.C[0]} <br />
+                  I : {action.I[0]}
+                </TableCell>
+                <TableCell>Y</TableCell>
+                <TableCell>{action.Importance}</TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
       </div>
