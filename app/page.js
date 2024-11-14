@@ -582,8 +582,13 @@ export default function Home() {
           </h2>
           {geminiResult?.data?.analysis?.proposed_ideas &&
           geminiResult.data.analysis.proposed_ideas.length > 0 ? (
-            geminiResult.data.analysis.proposed_ideas.map((idea, index) => (
-              <div key={index}>{idea}</div>
+            geminiResult?.data?.analysis?.proposed_ideas.map((ideaObj, index) => (
+              <div key={index} className="mb-4 p-4 border rounded-lg bg-gray-50">
+                <h3 className="font-semibold">Idea:</h3>
+                <p>{ideaObj.idea || "N/A"}</p>
+                <h3 className="font-semibold mt-2">Rationale:</h3>
+                <p>{ideaObj.rationale || "N/A"}</p>
+              </div>
             ))
           ) : (
             <div>No data found</div>
